@@ -10,13 +10,15 @@ const jobOfCodeEl = document.getElementById('jobOfCode');
 const keyBreakdownEl = document.getElementById('keyBreakdown');
 const plumbingEl = document.getElementById('plumbing');
 const summaryEl = document.getElementById('summary');
-const defaultButtonText = explainBtn.textContent;
+const btnTextEl = explainBtn.querySelector('.btn-text');
+
+const defaultButtonText = btnTextEl.textContent;
 
 function renderList(container, items = []) {
   container.innerHTML = '';
   if (!Array.isArray(items) || !items.length) {
     const li = document.createElement('li');
-    li.textContent = 'No details returned yet.';
+    li.innerHTML = '<em>*crickets chirping*</em>';
     container.appendChild(li);
     return;
   }
@@ -28,16 +30,26 @@ function renderList(container, items = []) {
   });
 }
 
+function resetOutputs() {
+  jobOfCodeEl.textContent = 'The void is listening...';
+  keyBreakdownEl.innerHTML = '';
+  plumbingEl.innerHTML = '';
+  summaryEl.textContent = '';
+}
+
 async function explainCode() {
   const code = codeInputEl.value.trim();
   if (!code) {
-    statusText.textContent = 'Please paste some code first.';
+    statusText.textContent = 'Oops! You forgot to paste the spooky code.';
+    statusText.classList.add('error');
     return;
   }
 
-  statusText.textContent = 'Analyzing...';
+  statusText.classList.remove('error');
+  statusText.textContent = 'Consulting the code spirits 🔮...';
   explainBtn.disabled = true;
-  explainBtn.textContent = 'Analyzing...';
+  btnTextEl.textContent = 'Decrypting matrix...';
+  resetOutputs();
 
   try {
     const response = await fetch('/api/explain', {
@@ -48,7 +60,7 @@ async function explainCode() {
       body: JSON.stringify({
         apiKey: apiKeyEl.value.trim(),
         code,
-        language: languageEl.value.trim() || 'unknown',
+        language: languageEl.value.trim(),
         tone: toneEl.value,
       }),
     });
@@ -56,21 +68,22 @@ async function explainCode() {
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data?.details ? `${data.error} ${data.details}` : data?.error || 'Request failed.');
+      throw new Error(data?.details ? `${data.error} ${data.details}` : data?.error || 'Spirits refused to answer.');
     }
 
-    jobOfCodeEl.textContent = data.job_of_code || 'No explanation returned.';
+    jobOfCodeEl.textContent = data.job_of_code || "Couldn't figure this one out.";
     renderList(keyBreakdownEl, data.key_breakdown || []);
     renderList(plumbingEl, data.plumbing_and_systems || []);
-    summaryEl.textContent = data.summary || 'No summary returned.';
+    summaryEl.textContent = data.summary || 'No summary this time.';
 
-    const source = data.source === 'groq' ? 'Groq' : 'mock mode';
-    statusText.textContent = `Done (${source}).`;
+    const source = (data.source || '').includes('groq') ? 'Groq ✨' : 'Mock Mode 🤖';
+    statusText.textContent = `Enlightenment achieved! (${source})`;
   } catch (error) {
-    statusText.textContent = `Error: ${error.message}`;
+    statusText.classList.add('error');
+    statusText.textContent = `Yikes: ${error.message}`;
   } finally {
     explainBtn.disabled = false;
-    explainBtn.textContent = defaultButtonText;
+    btnTextEl.textContent = defaultButtonText;
   }
 }
 

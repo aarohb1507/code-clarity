@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dev Anxiety Killer</title>
+    <title>ZenCode ✨ Anxiety Killer</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -13,60 +13,71 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    
     <main class="shell">
       <header class="hero">
-        <p class="eyebrow">Code Clarity Tool</p>
-        <h1>Dev Anxiety Killer</h1>
+        <p class="eyebrow">Code Clarity ✧</p>
+        <h1 class="glow-text">Dev Anxiety Killer 🧘‍♀️</h1>
         <p class="subtext">
-          Paste code. Get a calm, low-jargon technical breakdown.
+          Drop your terrifying code below. We'll translate it into friendly, bite-sized human logic. 
+          <strong>No buzzwords. No judgment.</strong>
         </p>
       </header>
 
-      <section class="panel input-panel">
-        <label for="apiKey">Groq API Key (optional, BYOK)</label>
-        <input id="apiKey" type="password" placeholder="gsk_..." autocomplete="off" />
+      <section class="panel input-panel glass">
+        <div class="field-group">
+          <label for="apiKey">Groq API Key <span class="dim">(Your secret magic wand 🪄, optional)</span></label>
+          <input id="apiKey" type="password" placeholder="gsk_abc123..." autocomplete="off" />
+        </div>
 
         <div class="row">
           <div class="field grow">
-            <label for="language">Language</label>
+            <label for="language">Language Flavor 👅</label>
             <select id="language">
-              <option value="javascript">JavaScript</option>
-              <option value="python">Python</option>
+              <option value="javascript">JavaScript (Chaotic neutral)</option>
+              <option value="python">Python (Elegant snake)</option>
             </select>
           </div>
           <div class="field">
-            <label for="tone">Tone</label>
+            <label for="tone">Vibe Check 🎧</label>
             <select id="tone">
-              <option value="beginner">Beginner-friendly</option>
-              <option value="balanced">Balanced technical</option>
+              <option value="beginner">Beginner (Hug me please)</option>
+              <option value="balanced">Balanced (Just the facts)</option>
             </select>
           </div>
         </div>
 
-        <label for="codeInput">Code Snippet</label>
-        <textarea id="codeInput" placeholder="Paste your code block here..."></textarea>
+        <div class="field-group code-group">
+          <label for="codeInput">The Matrix 👾</label>
+          <textarea id="codeInput" placeholder="// Paste that spooky spaghetti code right here..."></textarea>
+        </div>
 
         <div class="actions">
-          <button id="explainBtn">Explain This Code</button>
-          <span id="statusText" class="status"></span>
+          <button id="explainBtn" class="shiny-btn">
+            <span class="btn-bg"></span>
+            <span class="btn-text">✨ Demystify This Code ✨</span>
+          </button>
+          <span id="statusText" class="status">Waiting for your bravery...</span>
         </div>
       </section>
 
-      <section class="panel output-panel">
+      <section class="panel output-panel glass">
         <article class="card">
-          <h2>Job of This Code</h2>
-          <p id="jobOfCode">Waiting for analysis...</p>
+          <h2>TL;DR <span class="dim">(What is this thing?)</span> 🎯</h2>
+          <p id="jobOfCode">The void is listening...</p>
         </article>
         <article class="card">
-          <h2>Key Breakdown</h2>
+          <h2>The Nitty-Gritty 🔬</h2>
           <ul id="keyBreakdown"></ul>
         </article>
         <article class="card">
-          <h2>Plumbing and Systems View</h2>
+          <h2>Under the Hood ⚙️</h2>
           <ul id="plumbing"></ul>
         </article>
         <article class="card">
-          <h2>Summary</h2>
+          <h2>The Final Word 💡</h2>
           <p id="summary"></p>
         </article>
       </section>
