@@ -66,6 +66,42 @@ function normalizeExplanationShape(data) {
   };
 }
 
+function normalizeLineItem(line) {
+  return String(line || '')
+    .replace(/^[-*\d.)\s]+/, '')
+    .trim();
+}
+
+function textToExplanationShape(text, language) {
+  const raw = String(text || '').trim();
+  const lines = raw
+    .split('\n')
+    .map((line) => normalizeLineItem(line))
+    .filter(Boolean);
+
+  const cleanedParagraphs = raw
+    .replace(/```[\s\S]*?```/g, '')
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+
+  const job_of_code =
+    cleanedParagraphs[0] || `This ${language || 'code'} snippet performs a focused task and returns a result.`;
+
+  const key_breakdown = lines.slice(0, 4);
+  const plumbing_and_systems = lines.slice(4, 8);
+  const summary =
+    cleanedParagraphs[cleanedParagraphs.length - 1] ||
+    'This code follows a direct input-process-output flow with clear steps.';
+
+  return normalizeExplanationShape({
+    job_of_code,
+    key_breakdown,
+    plumbing_and_systems,
+    summary,
+  });
+}
+
 function mockExplanation(code, language) {
   const lines = code.split('\n').length;
   return {
@@ -92,7 +128,7 @@ app.post('/api/explain', async (req, res) => {
     return res.status(400).json({ error: 'Please provide a code snippet.' });
   }
 
-  const key = apiKey || process.env.GROQ_API_KEY;
+  const key = String(apiKey || process.env.GROQ_API_KEY || '').trim();
   if (!key) {
     return res.json(mockExplanation(code, language));
   }
@@ -121,6 +157,7 @@ app.post('/api/explain', async (req, res) => {
       body: JSON.stringify({
         model: selectedModel,
         temperature: 0.2,
+        response_format: { type: 'json_object' },
         messages: [
           { role: 'system', content: 'You explain code clearly for anxious developers.' },
           { role: 'user', content: prompt },
@@ -145,9 +182,9 @@ app.post('/api/explain', async (req, res) => {
 
     const parsed = extractJsonFromText(content);
     if (!parsed) {
-      return res.status(502).json({
-        error: 'LLM response was not valid JSON.',
-        raw: String(content).slice(0, 500),
+      return res.json({
+        ...textToExplanationShape(content, language),
+        source: 'groq-text-fallback',
       });
     }
 
