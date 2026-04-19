@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dev Anxiety Killer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="hero">
+        <p class="eyebrow">Code Clarity Tool</p>
+        <h1>Dev Anxiety Killer</h1>
+        <p class="subtext">
+          Paste code. Get a calm, low-jargon technical breakdown.
+        </p>
+      </header>
+
+      <section class="panel input-panel">
+        <label for="apiKey">Groq API Key (optional, BYOK)</label>
+        <input id="apiKey" type="password" placeholder="gsk_..." autocomplete="off" />
+
+        <div class="row">
+          <div class="field grow">
+            <label for="language">Language</label>
+            <input id="language" type="text" placeholder="javascript / python / go" />
+          </div>
+          <div class="field">
+            <label for="tone">Tone</label>
+            <select id="tone">
+              <option value="beginner">Beginner-friendly</option>
+              <option value="balanced">Balanced technical</option>
+            </select>
+          </div>
+        </div>
+
+        <label for="codeInput">Code Snippet</label>
+        <textarea id="codeInput" placeholder="Paste your code block here..."></textarea>
+
+        <div class="actions">
+          <button id="explainBtn">Explain This Code</button>
+          <span id="statusText" class="status"></span>
+        </div>
+      </section>
+
+      <section class="panel output-panel">
+        <article class="card">
+          <h2>Job of This Code</h2>
+          <p id="jobOfCode">Waiting for analysis...</p>
+        </article>
+        <article class="card">
+          <h2>Key Breakdown</h2>
+          <ul id="keyBreakdown"></ul>
+        </article>
+        <article class="card">
+          <h2>Plumbing and Systems View</h2>
+          <ul id="plumbing"></ul>
+        </article>
+        <article class="card">
+          <h2>Summary</h2>
+          <p id="summary"></p>
+        </article>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
