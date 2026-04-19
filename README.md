@@ -43,3 +43,4 @@ Request body:
 
 ## Important security note
 If an API key is ever pasted publicly (chat, screenshots, commits), rotate it immediately in provider settings.
+# code-clarity
