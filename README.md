@@ -16,6 +16,7 @@ A tiny app that explains code in simple technical language with less jargon.
   - Summary
 - Bring-your-own key (never stored)
 - Mock response fallback when key is missing
+- Automatic fallback explanation if Groq errors or returns empty output
 
 ## Run locally
 
@@ -49,4 +50,3 @@ Request body:
 
 ## Important security note
 If an API key is ever pasted publicly (chat, screenshots, commits), rotate it immediately in provider settings.
-# code-clarity

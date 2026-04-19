@@ -66,6 +66,58 @@ function normalizeExplanationShape(data) {
   };
 }
 
+function buildFallbackResponse(code, language, warning, details) {
+  return {
+    ...mockExplanation(code, language),
+    source: 'mock-fallback',
+    warning,
+    ...(details ? { details: String(details).slice(0, 300) } : {}),
+  };
+}
+
+function getAssistantContent(payload) {
+  const messageContent = payload?.choices?.[0]?.message?.content;
+  if (typeof messageContent === 'string') {
+    return messageContent;
+  }
+
+  if (Array.isArray(messageContent)) {
+    return messageContent
+      .map((part) => (typeof part === 'string' ? part : part?.text || ''))
+      .join('\n')
+      .trim();
+  }
+
+  return '';
+}
+
+async function requestGroqCompletion({ key, selectedModel, prompt, useJsonResponseFormat = true }) {
+  const body = {
+    model: selectedModel,
+    temperature: 0.2,
+    messages: [
+      { role: 'system', content: 'You explain code clearly for anxious developers.' },
+      { role: 'user', content: prompt },
+    ],
+  };
+
+  if (useJsonResponseFormat) {
+    body.response_format = { type: 'json_object' };
+  }
+
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    signal: AbortSignal.timeout(20000),
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${key}`,
+    },
+    body: JSON.stringify(body),
+  });
+
+  return response;
+}
+
 function normalizeLineItem(line) {
   return String(line || '')
     .replace(/^[-*\d.)\s]+/, '')
@@ -148,36 +200,60 @@ app.post('/api/explain', async (req, res) => {
       `Tone preference: ${tone || 'beginner'}`,
     ].join('\n');
 
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${key}`,
-      },
-      body: JSON.stringify({
-        model: selectedModel,
-        temperature: 0.2,
-        response_format: { type: 'json_object' },
-        messages: [
-          { role: 'system', content: 'You explain code clearly for anxious developers.' },
-          { role: 'user', content: prompt },
-        ],
-      }),
+    let response = await requestGroqCompletion({
+      key,
+      selectedModel,
+      prompt,
+      useJsonResponseFormat: true,
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      return res.status(response.status).json({
-        error: 'LLM request failed.',
-        details: errorText.slice(0, 300),
-      });
+      const supportsRetryWithoutJsonFormat =
+        response.status === 400 && /response_format|json_object/i.test(errorText);
+
+      if (supportsRetryWithoutJsonFormat) {
+        response = await requestGroqCompletion({
+          key,
+          selectedModel,
+          prompt,
+          useJsonResponseFormat: false,
+        });
+
+        if (!response.ok) {
+          const retryErrorText = await response.text();
+          return res.json(
+            buildFallbackResponse(
+              code,
+              language,
+              'Groq request failed after retry; returned fallback explanation instead.',
+              retryErrorText,
+            ),
+          );
+        }
+      } else {
+        return res.json(
+          buildFallbackResponse(
+            code,
+            language,
+            'Groq request failed; returned fallback explanation instead.',
+            errorText,
+          ),
+        );
+      }
     }
 
     const payload = await response.json();
-    const content = payload?.choices?.[0]?.message?.content;
+    const content = getAssistantContent(payload);
 
     if (!content) {
-      return res.status(502).json({ error: 'LLM returned an empty response.' });
+      return res.json(
+        buildFallbackResponse(
+          code,
+          language,
+          'Groq returned an empty response; returned fallback explanation instead.',
+        ),
+      );
     }
 
     const parsed = extractJsonFromText(content);
@@ -190,10 +266,14 @@ app.post('/api/explain', async (req, res) => {
 
     return res.json({ ...normalizeExplanationShape(parsed), source: 'groq' });
   } catch (error) {
-    return res.status(500).json({
-      error: 'Server error while explaining code.',
-      details: error.message,
-    });
+    return res.json(
+      buildFallbackResponse(
+        code,
+        language,
+        'Groq request errored; returned fallback explanation instead.',
+        error.message,
+      ),
+    );
   }
 });
 

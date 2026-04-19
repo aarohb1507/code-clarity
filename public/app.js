@@ -14,6 +14,24 @@ const btnTextEl = explainBtn.querySelector('.btn-text');
 
 const defaultButtonText = btnTextEl.textContent;
 
+async function parseJsonSafely(response) {
+  const raw = await response.text();
+  if (!raw || !raw.trim()) {
+    return {
+      error: 'Empty response from server.',
+    };
+  }
+
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return {
+      error: 'Server returned a non-JSON response.',
+      details: raw.slice(0, 200),
+    };
+  }
+}
+
 function renderList(container, items = []) {
   container.innerHTML = '';
   if (!Array.isArray(items) || !items.length) {
@@ -65,7 +83,7 @@ async function explainCode() {
       }),
     });
 
-    const data = await response.json();
+    const data = await parseJsonSafely(response);
 
     if (!response.ok) {
       throw new Error(data?.details ? `${data.error} ${data.details}` : data?.error || 'Spirits refused to answer.');
@@ -77,7 +95,9 @@ async function explainCode() {
     summaryEl.textContent = data.summary || 'No summary this time.';
 
     const source = (data.source || '').includes('groq') ? 'Groq ✨' : 'Mock Mode 🤖';
-    statusText.textContent = `Enlightenment achieved! (${source})`;
+    statusText.textContent = data.warning
+      ? `Enlightenment achieved (${source}, fallback used).`
+      : `Enlightenment achieved! (${source})`;
   } catch (error) {
     statusText.classList.add('error');
     statusText.textContent = `Yikes: ${error.message}`;
