@@ -10,6 +10,7 @@ const jobOfCodeEl = document.getElementById('jobOfCode');
 const keyBreakdownEl = document.getElementById('keyBreakdown');
 const plumbingEl = document.getElementById('plumbing');
 const summaryEl = document.getElementById('summary');
+const defaultButtonText = explainBtn.textContent;
 
 function renderList(container, items = []) {
   container.innerHTML = '';
@@ -36,6 +37,7 @@ async function explainCode() {
 
   statusText.textContent = 'Analyzing...';
   explainBtn.disabled = true;
+  explainBtn.textContent = 'Analyzing...';
 
   try {
     const response = await fetch('/api/explain', {
@@ -54,7 +56,7 @@ async function explainCode() {
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data?.error || 'Request failed.');
+      throw new Error(data?.details ? `${data.error} ${data.details}` : data?.error || 'Request failed.');
     }
 
     jobOfCodeEl.textContent = data.job_of_code || 'No explanation returned.';
@@ -68,6 +70,7 @@ async function explainCode() {
     statusText.textContent = `Error: ${error.message}`;
   } finally {
     explainBtn.disabled = false;
+    explainBtn.textContent = defaultButtonText;
   }
 }
 

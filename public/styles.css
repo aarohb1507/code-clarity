@@ -119,6 +119,11 @@ button:hover {
   background: var(--accent-dark);
 }
 
+button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
 .status {
   color: var(--ok);
   font-size: 0.9rem;

@@ -26,6 +26,12 @@ npm start
 
 Open [http://localhost:3000](http://localhost:3000)
 
+Optional: set your Groq key in `.env`:
+
+```bash
+cp .env.example .env
+```
+
 ## API
 
 `POST /api/explain`

@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+require('dotenv').config({ quiet: true });
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -32,6 +33,37 @@ function safeJsonParse(text) {
   } catch {
     return null;
   }
+}
+
+function extractJsonFromText(text) {
+  const raw = String(text || '').trim();
+  if (!raw) return null;
+
+  const direct = safeJsonParse(raw);
+  if (direct) return direct;
+
+  const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+  if (fenced?.[1]) {
+    const fromFence = safeJsonParse(fenced[1].trim());
+    if (fromFence) return fromFence;
+  }
+
+  const firstBrace = raw.indexOf('{');
+  const lastBrace = raw.lastIndexOf('}');
+  if (firstBrace >= 0 && lastBrace > firstBrace) {
+    return safeJsonParse(raw.slice(firstBrace, lastBrace + 1));
+  }
+
+  return null;
+}
+
+function normalizeExplanationShape(data) {
+  return {
+    job_of_code: String(data?.job_of_code || 'No explanation returned.'),
+    key_breakdown: Array.isArray(data?.key_breakdown) ? data.key_breakdown.map(String) : [],
+    plumbing_and_systems: Array.isArray(data?.plumbing_and_systems) ? data.plumbing_and_systems.map(String) : [],
+    summary: String(data?.summary || 'No summary returned.'),
+  };
 }
 
 function mockExplanation(code, language) {
@@ -68,9 +100,15 @@ app.post('/api/explain', async (req, res) => {
   const selectedModel = model || 'llama-3.1-8b-instant';
 
   try {
+    const toneInstruction =
+      tone === 'balanced'
+        ? 'Use clear technical language while staying concise.'
+        : 'Use beginner-friendly technical language with low jargon.';
+
     const prompt = [
       buildPrompt(code, language),
       '',
+      toneInstruction,
       `Tone preference: ${tone || 'beginner'}`,
     ].join('\n');
 
@@ -105,7 +143,7 @@ app.post('/api/explain', async (req, res) => {
       return res.status(502).json({ error: 'LLM returned an empty response.' });
     }
 
-    const parsed = safeJsonParse(content);
+    const parsed = extractJsonFromText(content);
     if (!parsed) {
       return res.status(502).json({
         error: 'LLM response was not valid JSON.',
@@ -113,7 +151,7 @@ app.post('/api/explain', async (req, res) => {
       });
     }
 
-    return res.json({ ...parsed, source: 'groq' });
+    return res.json({ ...normalizeExplanationShape(parsed), source: 'groq' });
   } catch (error) {
     return res.status(500).json({
       error: 'Server error while explaining code.',
